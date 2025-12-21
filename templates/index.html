@@ -2,35 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ayman Word Cipher</title>
+    <title>1024-bit Nigga Cipher</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 50px; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
-        h2 { color: #333; text-align: center; }
-        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
-        .enc-btn { background: #2ecc71; }
-        .dec-btn { background: #3498db; }
-        .result-box { margin-top: 25px; padding: 15px; background: #e8f4fd; border-left: 5px solid #3498db; word-wrap: break-word; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 700px; }
+        h2 { color: #00ff88; text-align: center; font-family: monospace; }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #444; border-radius: 6px; background: #252525; color: #fff; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .enc-btn { background: #00ff88; color: #000; }
+        .dec-btn { background: #0088ff; color: #fff; }
+        .result-box { margin-top: 25px; padding: 15px; background: #222; border: 1px dashed #00ff88; border-radius: 6px; }
+        .key-display { font-size: 10px; color: #aaa; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #444; overflow-wrap: break-word; }
+        label { font-size: 12px; color: #00ff88; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Ayman Word Cipher</h2>
+        <h2>Ayman Word Cipher_v2</h2>
         <form method="POST">
-            <textarea name="text" rows="4" placeholder="Enter text or words here..." required></textarea>
-            <input type="password" name="password" placeholder="Enter secret passphrase" required>
+            <label>Input Text (Message or Words):</label>
+            <textarea name="text" rows="4" placeholder="Type message to encrypt OR paste words to decrypt..." required></textarea>
+
+            <label>Passkey (Required for Decryption):</label>
+            <input type="text" name="passkey" placeholder="Paste the 1024-bit hex key here for decryption...">
+
             <div class="btn-group">
                 <button type="submit" name="action" value="encrypt" class="enc-btn">Encrypt</button>
-                <button type="submit" name="action" value="decrypt" class="dec-btn">Decrypt</button>
+                <button type="submit" name="action" value="decrypt" class="dec-btn">Decrypt with Key</button>
             </div>
         </form>
 
+        {% if key_out %}
+        <div class="result-box" style="border-color: #ffaa00;">
+            <label style="color: #ffaa00;">YOUR 1024-BIT KEY (SAVE THIS!):</label>
+            <div class="key-display">{{ key_out }}</div>
+        </div>
+        {% endif %}
+
         {% if result %}
         <div class="result-box">
-            <strong>{{ action_type }}:</strong>
-            <p>{{ result }}</p>
+            <label>{{ action_type }}:</label>
+            <p style="color: #fff; font-family: monospace;">{{ result }}</p>
         </div>
         {% endif %}
     </div>
