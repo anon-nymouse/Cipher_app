@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import hashlib
+import secrets
 
 app = Flask(__name__)
 
@@ -7,10 +8,11 @@ app = Flask(__name__)
 BITS_TO_WORD = {0: "tamjeed", 1: "biri", 2: "tala", 3: "khai"}
 WORD_TO_BITS = {v: k for k, v in BITS_TO_WORD.items()}
 
-def get_subkeys(main_key):
-    """Generates 8 unique subkeys from a master passphrase."""
+def get_subkeys(hex_key):
+    """Generates 8 unique subkeys from the 1024-bit hex key."""
     subkeys = []
-    seed = int(hashlib.sha256(str(main_key).encode()).hexdigest(), 16)
+    # Hash the long key to create a starting seed
+    seed = int(hashlib.sha256(hex_key.encode()).hexdigest(), 16)
     for _ in range(8):
         seed = (1103515245 * seed + 12345) % (2**31)
         subkeys.append(seed % 16)
@@ -30,40 +32,49 @@ def process_byte(byte_val, subkeys, decrypt=False):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     result = ""
+    generated_key = ""
     action_type = ""
-    
+
     if request.method == 'POST':
-        text = request.form.get('text', '')
-        password = request.form.get('password', 'default')
         action = request.form.get('action')
-        
-        main_key = sum(ord(c) for c in password)
-        subkeys = get_subkeys(main_key)
-        
+
         if action == 'encrypt':
+            text = request.form.get('text', '')
+            # Generate a 1024-bit key (128 bytes = 256 hex chars)
+            generated_key = secrets.token_hex(128)
+            subkeys = get_subkeys(generated_key)
+
             encoded_words = []
             for char in text:
                 enc_byte = process_byte(ord(char), subkeys)
                 for i in range(3, -1, -1):
                     encoded_words.append(BITS_TO_WORD[(enc_byte >> (i * 2)) & 0b11])
+
             result = " ".join(encoded_words)
             action_type = "Encrypted Message"
-            
-        elif action == 'decrypt':
-            try:
-                words = text.strip().split()
-                chars = []
-                for i in range(0, len(words), 4):
-                    byte_val = 0
-                    for j, word in enumerate(words[i:i+4]):
-                        byte_val |= (WORD_TO_BITS[word.lower()] << ((3 - j) * 2))
-                    chars.append(chr(process_byte(byte_val, subkeys, decrypt=True)))
-                result = "".join(chars)
-                action_type = "Decrypted Message"
-            except Exception:
-                result = "Error: Invalid cipher text or incorrect password."
 
-    return render_template('index.html', result=result, action_type=action_type)
+        elif action == 'decrypt':
+            text = request.form.get('text', '')
+            provided_key = request.form.get('passkey', '').strip()
+
+            if not provided_key:
+                result = "Error: You must provide the 1024-bit key to decrypt."
+            else:
+                try:
+                    subkeys = get_subkeys(provided_key)
+                    words = text.strip().split()
+                    chars = []
+                    for i in range(0, len(words), 4):
+                        byte_val = 0
+                        for j, word in enumerate(words[i:i+4]):
+                            byte_val |= (WORD_TO_BITS[word.lower()] << ((3 - j) * 2))
+                        chars.append(chr(process_byte(byte_val, subkeys, decrypt=True)))
+                    result = "".join(chars)
+                    action_type = "Decrypted Message"
+                except Exception:
+                    result = "Error: Decryption failed. Check your key and word sequence."
+
+    return render_template('index.html', result=result, action_type=action_type, key_out=generated_key)
 
 if __name__ == '__main__':
     app.run(debug=True)
