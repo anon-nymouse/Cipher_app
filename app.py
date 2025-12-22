@@ -5,7 +5,7 @@ import secrets
 app = Flask(__name__)
 
 # Vocabulary Mapping
-BITS_TO_WORD = {0: "tamjeed", 1: "biri", 2: "tala", 3: "khai"}
+BITS_TO_WORD = {0: "fadilah", 1: "bigaad", 2: "giya", 3: "haiii"}
 WORD_TO_BITS = {v: k for k, v in BITS_TO_WORD.items()}
 
 def get_subkeys(hex_key):
